@@ -4,7 +4,7 @@
 
 var element = 'point', mousePos = {x:0, y:0}, color = {r: 0, g: 0, b: 0, a:0}, clicks = 0;
 var points = [], lines = [], polygons = [];
-var new_line = false;
+var new_line = false, mouseDown = false;
 var line = new Line();
 var lastClick = {x: 0, y: 0}
 var canvas = document.getElementById('customizer');
@@ -22,7 +22,7 @@ function reDraw(){
         //lines[line].tick();
     }
 
-    if(mouseDown && new_line) {
+    if(mouseDown && new_line && element == 'line') {
         CTX.beginPath();
         CTX.moveTo(lastClick.x, lastClick.y);
         var point = new Point(mousePos.x, mousePos.y);
@@ -31,7 +31,103 @@ function reDraw(){
     }
 }
 
+function init(){
+    canvas.addEventListener("click", eventHandler, false);
+    canvas.addEventListener("mousemove", eventHandler, false);
+    canvas.addEventListener("mouseup", eventHandler, false);
+    canvas.addEventListener("mousedown", eventHandler, false);
+
+}
+
+init();
 setInterval(reDraw, 60);
+
+function eventHandler(event){
+    var current_event = event.type;
+    switch (current_event){
+        case 'click':
+            handleClick();
+            break;
+        case 'mousemove':
+            handleMove(event);
+            break;
+        case 'mouseup':
+            handleUp();
+            break;
+        case 'mousedown':
+            handleDown();
+            break;
+        default:
+            break;
+    }
+};
+
+//Events Handlers
+function handleMove(evt){
+    mousePos = getMousePos(canvas, evt);
+    switch(element){
+        case 'line':
+            if(mouseDown && clicks > 0){
+                CTX.globalCompositeOperation = 'xor';
+                CTX.closePath();
+                CTX.beginPath();
+                CTX.moveTo(lastClick.x, lastClick.y);
+                var point = new Point(mousePos.x, mousePos.y);
+                CTX.lineTo(point.x, point.y);
+                line.two = point;
+                CTX.stroke();
+                CTX.globalCompositeOperation = 'source-over';
+            }
+            break;
+    }
+}
+
+function handleClick(){
+    var point = new Point(mousePos.x, mousePos.y);
+
+    switch (element){
+        case 'point':
+            points.push(point);
+            point.draw();
+            break;
+        case 'line':
+            CTX.fillStyle = 'rgba(0, 200, 0, 1)';
+            line = new Line();
+            if(clicks == 0){
+                new_line = true;
+                CTX.beginPath();
+                CTX.moveTo(point.x, point.y);
+                CTX.closePath();
+                lastClick.x = point.x; lastClick.y = point.y;
+                line.one = point;
+                clicks ++;
+            }
+
+            break;
+        case 'polygon':
+            break;
+        default:
+            break;
+    }
+}
+
+function handleUp(){
+    mouseDown = false;
+    clicks = 0;
+
+    if(new_line && (typeof line.two.x != 'undefined' && typeof line.two.y != 'undefined')){
+        lines.push(line);
+        new_line = false;
+        clicks = 0;
+        lastClick.x = 0; lastClick.y = 0;
+    }
+
+    var point = new Point(0, 0);
+}
+
+function handleDown(){
+    mouseDown = true
+}
 
 //Classes
 function Point(x, y){
@@ -66,77 +162,6 @@ function Rectangle(x, y, w, h){
     this.h = h;
 }
 
-var mouseDown = false;
-
-document.addEventListener('DOMContentLoaded', function(){
-    if(canvas.getContext('2d')){
-        canvas.addEventListener('mousemove', function(evt){
-            mousePos = getMousePos(canvas, evt);
-            switch(element){
-                case 'line':
-                    if(mouseDown && clicks > 0){
-                        CTX.globalCompositeOperation = 'xor';
-                        CTX.closePath();
-                        CTX.beginPath();
-                        CTX.moveTo(lastClick.x, lastClick.y);
-                        var point = new Point(mousePos.x, mousePos.y);
-                        CTX.lineTo(point.x, point.y);
-                        line.two = point;
-                        CTX.stroke();
-                        CTX.globalCompositeOperation = 'source-over';
-                    }
-                    break;
-            }
-        });
-
-        canvas.addEventListener('mousedown', function() { mouseDown = true })
-        canvas.addEventListener('mouseup', function() {
-            mouseDown = false;
-            clicks = 0;
-
-            if(new_line && (typeof line.two.x != 'undefined' && typeof line.two.y != 'undefined')){
-                lines.push(line);
-                new_line = false;
-                clicks = 0;
-                lastClick.x = 0; lastClick.y = 0;
-            }
-
-            var point = new Point(0, 0);
-        })
-
-        canvas.addEventListener('click', function(evt){
-            var point = new Point(mousePos.x, mousePos.y);
-
-            switch (element){
-                case 'point':
-                    points.push(point);
-                    drawPoint(point);
-                    break;
-                case 'line':
-                    CTX.fillStyle = 'rgba(0, 200, 0, 1)';
-                    line = new Line();
-                    if(clicks == 0){
-                        new_line = true;
-                        CTX.beginPath();
-                        CTX.moveTo(point.x, point.y);
-                        CTX.closePath();
-                        lastClick.x = point.x; lastClick.y = point.y;
-                        line.one = point;
-                        clicks ++;
-                    }
-
-                    break;
-                case 'polygon':
-                    break;
-                default:
-                    break;
-            }
-        });
-    }else{
-
-    }
-}, false);
-
 
 //Helpers
 function getMousePos(canvas, evt){
@@ -145,16 +170,6 @@ function getMousePos(canvas, evt){
         x: evt.clientX - rect.left,
         y: evt.clientY - rect.top
     }
-}
-
-function drawPoint(point){
-    CTX.beginPath();
-    CTX.arc(point.x, point.y, point.size, 0, Math.PI * 2, true);
-    CTX.fill();
-}
-
-function drawRectangle(rectangle){
-    CTX.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
 }
 
 $(document).ready(function(){
