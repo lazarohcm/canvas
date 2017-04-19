@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customizer</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">
+                Customizer
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="col-lg-12 col-md-12 col-sm-12">
+    <div class="row">
+        <div class="jumbotron text-center">
+            <h2>Customize sua camisa ou caneca</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="col-md-12">
+                <h3>Elements</h3>
+                <div class="row elements">
+                    <button title="Point" type="button" class="btn btn-default active point" aria-label="Left Align">
+                        <span class="fa fa-circle" aria-hidden="true"></span>
+                    </button>
+                    <button title="Line" type="button" class="btn btn-default line" aria-label="Left Align">
+                        <span class="fa fa-minus" aria-hidden="true"></span>
+                    </button>
+                    <button title="Polygon" type="button" class="btn btn-default polygon" aria-label="Left Align">
+                        <span class="fa fa-square-o" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <h3>Choose color</h3>
+                <div class="row colors">
+                    <div class="color color-black"></div>
+                    <div class="color color-white"></div>
+                    <div class="color color-red"></div>
+                    <div class="color color-yellow"></div>
+                    <div class="color color-blue"></div>
+                    <div class="color color-green"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <canvas id="customizer" width="900" height="500">
+                <img src="Twitter_bird_icon.png" width="150" height="150" alt=""/>
+            </canvas>
+        </div>
+    </div>
+</div>
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>

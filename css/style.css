@@ -1,0 +1,34 @@
+#customizer{
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19) !important;
+}
+
+.color{
+    width: 20px;
+    height: 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    box-sizing: border-box;
+    float: left;
+}
+
+.color.color-black{
+    background-color: #0f0f0f;
+}
+
+.color.color-blue{
+    background-color: blue;
+}
+.color.color-green{
+    background-color: green;
+}
+.color.color-red{
+    background-color: red;
+}
+.color.color-yellow{
+    background-color: yellow;
+}
+
+.color.color-white{
+    background-color: white;
+    border: 1px solid;
+}
