@@ -9,6 +9,7 @@ var line = new Line();
 var lastClick = {x: 0, y: 0}
 var canvas = document.getElementById('customizer');
 var CTX = canvas.getContext('2d');
+var TOL = 5;
 
 function reDraw(){
     CTX.clearRect(0,0,canvas.width, canvas.height);
@@ -101,6 +102,14 @@ function handleClick(){
             break;
         case 'select':
             pause = true;
+            for(var point in points){
+                if(points[point].pick()){
+                    console.log(points[point]);
+                }
+                points[point].draw();
+                points[point].tick();
+            }
+            break;
         default:
             break;
     }
@@ -156,6 +165,15 @@ function Point(x, y){
                 this.y_speed = -(this.y_speed);
             }
         }
+    }
+
+    this.pick = function(){
+        if((mousePos.x >= (this.x - TOL)) && (mousePos.x <= (this.x + TOL))){
+            if((mousePos.y >= (this.y - TOL)) && (mousePos.y <= (this.y + TOL))){
+                return true;
+            }
+        }
+        return false;
     }
 }
 
