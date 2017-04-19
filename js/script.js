@@ -4,7 +4,7 @@
 
 var element = 'point', mousePos = {x:0, y:0}, color = {r: 0, g: 0, b: 0, a:0}, clicks = 0;
 var points = [], lines = [], polygons = [];
-var new_line = false, mouseDown = false;
+var new_line = false, mouseDown = false, pause = false;
 var line = new Line();
 var lastClick = {x: 0, y: 0}
 var canvas = document.getElementById('customizer');
@@ -99,6 +99,8 @@ function handleClick(){
             break;
         case 'polygon':
             break;
+        case 'select':
+            pause = true;
         default:
             break;
     }
@@ -137,20 +139,22 @@ function Point(x, y){
     }
 
     this.tick = function(){
-        this.x += this.x_speed;
-        this.y += this.y_speed;
-        if((this.x + this.size) >= canvas.width){
-            this.x_speed = -(this.x_speed);
-        }
-        if((this.x - this.size) <= 0){
-            this.x_speed = -(this.x_speed);
-        }
+        if(!pause){
+            this.x += this.x_speed;
+            this.y += this.y_speed;
+            if((this.x + this.size) >= canvas.width){
+                this.x_speed = -(this.x_speed);
+            }
+            if((this.x - this.size) <= 0){
+                this.x_speed = -(this.x_speed);
+            }
 
-        if((this.y + this.size) >= canvas.height){
-            this.y_speed = -(this.y_speed);
-        }
-        if((this.y - this.size) <= 0){
-            this.y_speed = -(this.y_speed);
+            if((this.y + this.size) >= canvas.height){
+                this.y_speed = -(this.y_speed);
+            }
+            if((this.y - this.size) <= 0){
+                this.y_speed = -(this.y_speed);
+            }
         }
     }
 }
@@ -195,17 +199,25 @@ function getMousePos(canvas, evt){
 }
 
 $(document).ready(function(){
-    $('.elements button').on('click', function(e){
-        $('.elements button').removeClass('active');
+    $('.menu button').on('click', function(e){
+        $('.menu button').removeClass('active');
         $(this).toggleClass('active');
         if($(this).hasClass('point')){
             element = 'point';
+            pause = false;
         }
         if($(this).hasClass('line')){
             element = 'line';
+            pause = false;
         }
         if($(this).hasClass('polygon')){
             element = 'polygon';
+            pause = false;
+        }
+
+        if($(this).hasClass('select')){
+            element = 'select';
+            pause = true;
         }
     })
 });

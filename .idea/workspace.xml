@@ -22,8 +22,8 @@
       <file leaf-file-name="index.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="347">
-              <caret line="21" column="43" lean-forward="false" selection-start-line="21" selection-start-column="43" selection-end-line="21" selection-end-column="43" />
+            <state relative-caret-position="156">
+              <caret line="42" column="79" lean-forward="false" selection-start-line="42" selection-start-column="79" selection-end-line="42" selection-end-column="79" />
               <folding />
             </state>
           </provider>
@@ -42,14 +42,13 @@
       <file leaf-file-name="script.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/js/script.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-480">
-              <caret line="77" column="18" lean-forward="true" selection-start-line="77" selection-start-column="18" selection-end-line="77" selection-end-column="18" />
+            <state relative-caret-position="225">
+              <caret line="202" column="16" lean-forward="false" selection-start-line="202" selection-start-column="16" selection-end-line="202" selection-end-column="16" />
               <folding>
                 <element signature="e#0#44#0" expanded="false" />
                 <element signature="n#!!block;n#eventHandler#0" expanded="false" />
                 <element signature="n#!!block;n#Rectangle#0" expanded="false" />
                 <element signature="n#!!block;n#getMousePos#0" expanded="false" />
-                <element signature="e#4633#5028#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -119,35 +118,21 @@
         <subPane>
           <PATH>
             <PATH_ELEMENT>
-              <option name="myItemId" value="html-canvas" />
+              <option name="myItemId" value="canvas" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="html-canvas" />
+              <option name="myItemId" value="canvas" />
               <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
-              <option name="myItemId" value="html-canvas" />
+              <option name="myItemId" value="canvas" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="html-canvas" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="js" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="html-canvas" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="html-canvas" />
+              <option name="myItemId" value="canvas" />
               <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
@@ -264,12 +249,12 @@
       <workItem from="1490639689649" duration="1100000" />
       <workItem from="1490646121933" duration="9049000" />
       <workItem from="1492569563395" duration="81000" />
-      <workItem from="1492604170345" duration="6970000" />
+      <workItem from="1492604170345" duration="8588000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="17200000" />
+    <option name="totallyTimeSpent" value="18818000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="27" width="1366" height="741" extended-state="6" />
@@ -330,7 +315,6 @@
             <element signature="n#!!block;n#eventHandler#0" expanded="false" />
             <element signature="n#!!block;n#Rectangle#0" expanded="false" />
             <element signature="n#!!block;n#getMousePos#0" expanded="false" />
-            <element signature="e#4633#5028#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -360,7 +344,6 @@
             <element signature="n#!!block;n#eventHandler#0" expanded="false" />
             <element signature="n#!!block;n#Rectangle#0" expanded="false" />
             <element signature="n#!!block;n#getMousePos#0" expanded="false" />
-            <element signature="e#4633#5028#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -390,22 +373,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="347">
-          <caret line="21" column="43" lean-forward="false" selection-start-line="21" selection-start-column="43" selection-end-line="21" selection-end-column="43" />
+        <state relative-caret-position="156">
+          <caret line="42" column="79" lean-forward="false" selection-start-line="42" selection-start-column="79" selection-end-line="42" selection-end-column="79" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/js/script.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-480">
-          <caret line="77" column="18" lean-forward="true" selection-start-line="77" selection-start-column="18" selection-end-line="77" selection-end-column="18" />
+        <state relative-caret-position="225">
+          <caret line="202" column="16" lean-forward="false" selection-start-line="202" selection-start-column="16" selection-end-line="202" selection-end-column="16" />
           <folding>
             <element signature="e#0#44#0" expanded="false" />
             <element signature="n#!!block;n#eventHandler#0" expanded="false" />
             <element signature="n#!!block;n#Rectangle#0" expanded="false" />
             <element signature="n#!!block;n#getMousePos#0" expanded="false" />
-            <element signature="e#4633#5028#0" expanded="false" />
           </folding>
         </state>
       </provider>
