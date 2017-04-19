@@ -13,16 +13,18 @@ var CTX = canvas.getContext('2d');
 function reDraw(){
     CTX.clearRect(0,0,canvas.width, canvas.height);
     for(var line in lines){
+        CTX.setLineDash([0, 0]);
         lines[line].draw();
         //lines[line].tick();
     }
 
     for(var point in points){
         points[point].draw();
-        //lines[line].tick();
+        points[point].tick();
     }
 
     if(mouseDown && new_line && element == 'line') {
+        CTX.setLineDash([2, 2]);
         CTX.beginPath();
         CTX.moveTo(lastClick.x, lastClick.y);
         var point = new Point(mousePos.x, mousePos.y);
@@ -69,13 +71,8 @@ function handleMove(evt){
         case 'line':
             if(mouseDown && clicks > 0){
                 CTX.globalCompositeOperation = 'xor';
-                CTX.closePath();
-                CTX.beginPath();
-                CTX.moveTo(lastClick.x, lastClick.y);
-                var point = new Point(mousePos.x, mousePos.y);
-                CTX.lineTo(point.x, point.y);
-                line.two = point;
-                CTX.stroke();
+                line.two = new Point(mousePos.x, mousePos.y);
+                line.draw();
                 CTX.globalCompositeOperation = 'source-over';
             }
             break;
@@ -95,14 +92,10 @@ function handleClick(){
             line = new Line();
             if(clicks == 0){
                 new_line = true;
-                CTX.beginPath();
-                CTX.moveTo(point.x, point.y);
-                CTX.closePath();
                 lastClick.x = point.x; lastClick.y = point.y;
                 line.one = point;
-                clicks ++;
             }
-
+            clicks ++;
             break;
         case 'polygon':
             break;
@@ -114,12 +107,11 @@ function handleClick(){
 function handleUp(){
     mouseDown = false;
     clicks = 0;
-
     if(new_line && (typeof line.two.x != 'undefined' && typeof line.two.y != 'undefined')){
         lines.push(line);
         new_line = false;
         clicks = 0;
-        lastClick.x = 0; lastClick.y = 0;
+        lastClick.x = null; lastClick.y = null;
     }
 
     var point = new Point(0, 0);
@@ -134,6 +126,8 @@ function Point(x, y){
     this.size = 3;
     this.x = x;
     this.y = y;
+    this.x_speed = randX();
+    this.y_speed = randX();
 
     //It actually draws a circle with a static radius of 3
     this.draw = function() {
@@ -141,17 +135,45 @@ function Point(x, y){
         CTX.arc(this.x, this.y, this.size, 0, Math.PI * 2, true);
         CTX.fill();
     }
+
+    this.tick = function(){
+        this.x += this.x_speed;
+        this.y += this.y_speed;
+        if((this.x + this.size) >= canvas.width){
+            this.x_speed = -(this.x_speed);
+        }
+        if((this.x - this.size) <= 0){
+            this.x_speed = -(this.x_speed);
+        }
+
+        if((this.y + this.size) >= canvas.height){
+            this.y_speed = -(this.y_speed);
+        }
+        if((this.y - this.size) <= 0){
+            this.y_speed = -(this.y_speed);
+        }
+    }
+}
+
+function randX(){
+    return Math.random() < 0.5 ? -1 : 1;
 }
 
 function Line(one, two) {
     this.one = new Point(one);
     this.two = new Point(two);
+    this.size = 2;
     this.draw = function (){
         CTX.closePath();
         CTX.beginPath();
+        CTX.lineWidth = this.size;
         CTX.moveTo(this.one.x, this.one.y);
         CTX.lineTo(this.two.x, this.two.y);
         CTX.stroke();
+    }
+
+    this.tick = function(){
+
     }
 }
 
