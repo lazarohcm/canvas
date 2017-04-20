@@ -100,8 +100,6 @@ document.addEventListener('DOMContentLoaded', function(){
                 clicks = 0;
                 lastClick.x = 0; lastClick.y = 0;
             }
-
-            var point = new Point(0, 0);
         })
 
         canvas.addEventListener('click', function(evt){
@@ -151,10 +149,6 @@ function drawPoint(point){
     CTX.beginPath();
     CTX.arc(point.x, point.y, point.size, 0, Math.PI * 2, true);
     CTX.fill();
-}
-
-function drawRectangle(rectangle){
-    CTX.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
 }
 
 $(document).ready(function(){
