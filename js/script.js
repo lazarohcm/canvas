@@ -11,10 +11,19 @@ var canvas = document.getElementById('customizer');
 var CTX = canvas.getContext('2d');
 var TOL = 5;
 
+//Polygons
+//radius of click around the first point to close the draw
+var END_CLICK_RADIUS = 15;
+//the max number of points of your polygon
+var MAX_POINTS = 8;
+
+var polygon_started = false;
+var polygon = new Polygon();
+
 function reDraw(){
     CTX.clearRect(0,0,canvas.width, canvas.height);
     for(var line in lines){
-        CTX.setLineDash([0, 0]);
+        CTX.setLineDash([]);
         lines[line].draw();
         //lines[line].tick();
     }
@@ -22,6 +31,18 @@ function reDraw(){
     for(var point in points){
         points[point].draw();
         points[point].tick();
+    }
+    if(polygons.length > 0){
+        for (var id in polygons){
+            polygons[id].draw();
+        }
+    }
+    if(polygon_started){
+        polygon.draw();
+        CTX.moveTo(polygon.points[polygon.points.length - 1].x, polygon.points[polygon.points.length - 1].y);
+        CTX.lineTo(mousePos.x, mousePos.y);
+        CTX.stroke();
+        CTX.setLineDash([]);
     }
 
     if(mouseDown && element == 'line' || (clicks == 1 && element == 'line')) {
@@ -75,12 +96,14 @@ function handleMove(evt){
     switch(element){
         case 'line':
             if(clicks == 1){
-                CTX.globalCompositeOperation = 'xor';
-                CTX.setLineDash([2, 2]);
-                line.two = new Point(mousePos.x, mousePos.y);
-                line.draw();
-                CTX.globalCompositeOperation = 'source-over';
+                // CTX.globalCompositeOperation = 'xor';
+                // CTX.setLineDash([2, 2]);
+                // line.two = new Point(mousePos.x, mousePos.y);
+                // line.draw();
+                // CTX.globalCompositeOperation = 'source-over';
             }
+            break;
+        case 'polygon':
             break;
     }
 }
@@ -107,7 +130,31 @@ function handleClick(){
             }
             break;
         case 'polygon':
-
+            var x_click = mousePos.x;
+            var y_click = mousePos.y;
+            if(polygon_started){
+                //drawing the next line and closing the polygon if needed
+                if((Math.abs(x_click - polygon.points[0].x) < END_CLICK_RADIUS &&
+                    Math.abs(y_click - polygon.points[0].y) < END_CLICK_RADIUS) && polygon.points.length > 1){
+                    polygon_started = false;
+                    polygon.saved = true;
+                    polygons.push(polygon);
+                    polygon = new Polygon();
+                } else {
+                    polygon.points.push(new Point(x_click, y_click));
+                    if(polygon.points.length >= MAX_POINTS){
+                        polygon.saved = true;
+                        polygons.push(polygon);
+                        polygon = new Polygon();
+                        polygon_started = false;
+                    }
+                }
+            }else{
+                //starting the polygon
+                polygon.points.push(new Point(x_click, y_click));
+                polygon_started = true;
+            }
+            console.log(polygons);
             break;
         case 'select':
             pause = true;
@@ -122,7 +169,6 @@ function handleClick(){
             var min = new Point(mousePos.x - TOL, mousePos.y - TOL);
             var max = new Point(mousePos.x + TOL, mousePos.y + TOL);
             for(var id in lines){
-                // console.log(lines[id].pick(min, max));
                 if(lines[id].pick(min,max)) console.log(id);
             }
             break;
@@ -280,12 +326,34 @@ function Line(one, two) {
     }
 }
 
-function Rectangle(x, y, w, h){
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
+function Polygon(){
+    this.points = [];
+    this.color = randRGBA();
+    this.saved = false;
+    this.draw = function(){
+        CTX.beginPath();
+        CTX.strokeStyle = this.color;
+        CTX.setLineDash([]);
+        for (var p in this.points){
+            if(p == 0){
+                CTX.moveTo(this.points[p].x, this.points[p].y);
+            }else{
+                CTX.lineTo(this.points[p].x, this.points[p].y);
+            }
+        }
+        CTX.stroke();
+        if(polygon_started && !this.saved){
+            CTX.setLineDash([2, 2]);
+            CTX.lineTo(this.points[0].x, this.points[0].y);
+            CTX.stroke();
+        }else{
+            CTX.setLineDash([]);
+            CTX.lineTo(this.points[0].x, this.points[0].y);
+            CTX.stroke();
+        }
+    }
 }
+
 
 
 //Helpers
