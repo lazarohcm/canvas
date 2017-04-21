@@ -6,7 +6,7 @@ var element = 'point', mousePos = {x:0, y:0}, color = {r: 0, g: 0, b: 0, a:0}, c
 var points = [], lines = [], polygons = [];
 var new_line = false, mouseDown = false, pause = false;
 var line = new Line();
-var lastClick = {x: 0, y: 0}
+var lastClick = {x: null, y: null}
 var canvas = document.getElementById('customizer');
 var CTX = canvas.getContext('2d');
 var TOL = 5;
@@ -24,13 +24,17 @@ function reDraw(){
         points[point].tick();
     }
 
-    if(mouseDown && new_line && element == 'line') {
-        CTX.setLineDash([2, 2]);
-        CTX.beginPath();
-        CTX.moveTo(lastClick.x, lastClick.y);
-        var point = new Point(mousePos.x, mousePos.y);
-        CTX.lineTo(point.x, point.y);
-        CTX.stroke();
+    if(mouseDown && element == 'line' || (clicks == 1 && element == 'line')) {
+
+        if(lastClick.x != null && lastClick.y != null){
+            CTX.setLineDash([2, 2]);
+            CTX.beginPath();
+            CTX.moveTo(lastClick.x, lastClick.y);
+            var point = new Point(mousePos.x, mousePos.y);
+            CTX.lineTo(point.x, point.y);
+            CTX.stroke();
+        }
+
     }
 }
 
@@ -70,8 +74,9 @@ function handleMove(evt){
     mousePos = getMousePos(canvas, evt);
     switch(element){
         case 'line':
-            if(mouseDown && clicks > 0){
+            if(clicks == 1){
                 CTX.globalCompositeOperation = 'xor';
+                CTX.setLineDash([2, 2]);
                 line.two = new Point(mousePos.x, mousePos.y);
                 line.draw();
                 CTX.globalCompositeOperation = 'source-over';
@@ -82,23 +87,27 @@ function handleMove(evt){
 
 function handleClick(){
     var point = new Point(mousePos.x, mousePos.y);
-
     switch (element){
         case 'point':
             points.push(point);
             point.draw();
             break;
         case 'line':
-            CTX.fillStyle = 'rgba(0, 200, 0, 1)';
-            line = new Line();
-            if(clicks == 0){
+            clicks ++;
+            if(clicks == 1){
+                line = new Line();
                 new_line = true;
                 lastClick.x = point.x; lastClick.y = point.y;
-                line.one = point;
+                line.one = new Point(mousePos.x, mousePos.y);
             }
-            clicks ++;
+            if(clicks == 2){
+                clicks = 0;
+                line.two = new Point(mousePos.x, mousePos.y);
+                lines.push(line);
+            }
             break;
         case 'polygon':
+
             break;
         case 'select':
             pause = true;
@@ -109,23 +118,49 @@ function handleClick(){
                 points[point].draw();
                 points[point].tick();
             }
+
+            var min = new Point(mousePos.x - TOL, mousePos.y - TOL);
+            var max = new Point(mousePos.x + TOL, mousePos.y + TOL);
+            for(var id in lines){
+                // console.log(lines[id].pick(min, max));
+                if(lines[id].pick(min,max)) console.log(id);
+            }
             break;
         default:
             break;
     }
 }
+const INSIDE = 0, LEFT = 1, RIGHT = 2, TOP = 3, BOTTOM = 4;
+function pickCode(vertex, min_point, max_point){
+    // var code = INSIDE;
+    //
+    // //true means that the line is on that direction
+    // if(vertex.x < min_point.x){
+    //     code = LEFT;
+    // }else if(vertex.x > max_point.x){
+    //     code = RIGHT;
+    // }
+    // if(vertex.y < min_point.y){
+    //     code = BOTTOM;
+    // }else if(vertex.y > max_point.y){
+    //     code = TOP;
+    // }
+
+    var code = [];
+    //Left
+    code[0] = vertex.x < min_point.x;
+    //right
+    code[1] = vertex.x > max_point.x;
+    //bottom
+    code[2] = vertex.y < min_point.y;
+    //top
+    code[3] = vertex.y > max_point.y;
+    return code;
+}
 
 function handleUp(){
     mouseDown = false;
-    clicks = 0;
-    if(new_line && (typeof line.two.x != 'undefined' && typeof line.two.y != 'undefined')){
-        lines.push(line);
-        new_line = false;
-        clicks = 0;
-        lastClick.x = null; lastClick.y = null;
-    }
-
-    var point = new Point(0, 0);
+    lastClick.x = null; lastClick.y = null;
 }
 
 function handleDown(){
@@ -139,11 +174,15 @@ function Point(x, y){
     this.y = y;
     this.x_speed = randX();
     this.y_speed = randX();
+    this.color = randRGBA();
 
     //It actually draws a circle with a static radius of 3
     this.draw = function() {
+        CTX.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+        CTX.fillStyle = this.color;
         CTX.beginPath();
         CTX.arc(this.x, this.y, this.size, 0, Math.PI * 2, true);
+        CTX.stroke();
         CTX.fill();
     }
 
@@ -185,8 +224,10 @@ function Line(one, two) {
     this.one = new Point(one);
     this.two = new Point(two);
     this.size = 2;
+    this.color = randRGBA();
     this.draw = function (){
-        CTX.closePath();
+        CTX.strokeStyle = 'rgba(0, 0, 0, 1)';
+        CTX.strokeStyle = this.color;
         CTX.beginPath();
         CTX.lineWidth = this.size;
         CTX.moveTo(this.one.x, this.one.y);
@@ -196,6 +237,46 @@ function Line(one, two) {
 
     this.tick = function(){
 
+    }
+
+    this.pick = function(min, max){
+        /**
+         * Source: https://github.com/donkike/Computer-Graphics/blob/master/LineClipping/LineClippingPanel.java
+         */
+        var temp_one = new Point(this.one.x, this.one.y);
+        var temp_two = new Point(this.two.x, this.two.y);
+        var code_two = pickCode(this.two, min, max);
+
+        do{
+            var code_one = pickCode(temp_one, min, max);
+            //Trivial
+            var i;
+            for(i = 0; i < 4; i++){
+                if(code_one[i] && code_two[i]){
+                    break;
+                }
+            }
+            if(i != 4){
+                break;
+            }
+
+            if(code_one[0]){
+                temp_one.y += (min.x - temp_one.x) * (temp_two.y - temp_one.y) / (temp_two.x - temp_one.x);
+                temp_one.x = min.x;
+            } else if(code_one[1]){
+                temp_one.y += (max.x - temp_one.x) * (temp_two.y - temp_one.y) / (temp_two.x - temp_one.x);
+                temp_one.x = max.x;
+            } else if(code_one[2]){
+                temp_one.x += (min.y - temp_one.y) * (temp_two.x - temp_one.x) / (temp_two.y - temp_one.y);
+                temp_one.y = min.y;
+            }else if(code_one[3]){
+                temp_one.x += (max.y - temp_one.y) * (temp_two.x - temp_one.x) / (temp_two.y - temp_one.y);
+                temp_one.y = min.y;
+            }else{
+                return true;
+            }
+        }while(true);
+        return false;
     }
 }
 
@@ -214,6 +295,14 @@ function getMousePos(canvas, evt){
         x: evt.clientX - rect.left,
         y: evt.clientY - rect.top
     }
+}
+
+function randRGBA(){
+    var red, green, blue;
+    red = Math.floor((Math.random() * 255) + 1);
+    green = Math.floor((Math.random() * 255) + 1);
+    blue = Math.floor((Math.random() * 255) + 1);
+    return 'rgba(' +red+ ', ' +green+ ', ' +blue+ ', 0.7)';
 }
 
 $(document).ready(function(){
