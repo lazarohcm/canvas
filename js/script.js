@@ -10,7 +10,7 @@ var lastClick = {x: null, y: null}
 var canvas = document.getElementById('customizer');
 var CTX = canvas.getContext('2d');
 var TOL = 5;
-
+CTX.save();
 //Polygons
 //radius of click around the first point to close the draw
 var END_CLICK_RADIUS = 15;
@@ -22,6 +22,13 @@ var polygon = new Polygon();
 
 function reDraw(){
     CTX.clearRect(0,0,canvas.width, canvas.height);
+
+    if(polygons.length > 0){
+        for (var id in polygons){
+            polygons[id].draw();
+        }
+    }
+
     for(var line in lines){
         CTX.setLineDash([]);
         lines[line].draw();
@@ -32,11 +39,7 @@ function reDraw(){
         points[point].draw();
         points[point].tick();
     }
-    if(polygons.length > 0){
-        for (var id in polygons){
-            polygons[id].draw();
-        }
-    }
+
     if(polygon_started){
         polygon.draw();
         CTX.moveTo(polygon.points[polygon.points.length - 1].x, polygon.points[polygon.points.length - 1].y);
@@ -135,7 +138,7 @@ function handleClick(){
             if(polygon_started){
                 //drawing the next line and closing the polygon if needed
                 if((Math.abs(x_click - polygon.points[0].x) < END_CLICK_RADIUS &&
-                    Math.abs(y_click - polygon.points[0].y) < END_CLICK_RADIUS) && polygon.points.length > 1){
+                    Math.abs(y_click - polygon.points[0].y) < END_CLICK_RADIUS) && polygon.points.length){
                     polygon_started = false;
                     polygon.saved = true;
                     polygons.push(polygon);
@@ -171,6 +174,11 @@ function handleClick(){
             for(var id in lines){
                 if(lines[id].pick(min,max)) console.log(id);
             }
+
+            for (var id in polygons){
+                if(polygons[id].pick( new Point(mousePos.x, mousePos.y))) console.log(id);
+            }
+
             break;
         default:
             break;
@@ -274,8 +282,8 @@ function Line(one, two) {
     this.draw = function (){
         CTX.strokeStyle = 'rgba(0, 0, 0, 1)';
         CTX.strokeStyle = this.color;
-        CTX.beginPath();
         CTX.lineWidth = this.size;
+        CTX.beginPath();
         CTX.moveTo(this.one.x, this.one.y);
         CTX.lineTo(this.two.x, this.two.y);
         CTX.stroke();
@@ -330,10 +338,47 @@ function Polygon(){
     this.points = [];
     this.color = randRGBA();
     this.saved = false;
+    this.size = 2;
+
+    this.pick = function(point){
+        var angle = 0;
+        for (var p in this.points){
+            var line_one = new Line(), line_two = new Line();
+            line_one.one = point; line_one.two = new Point(this.points[p].x, this.points[p].y);
+            line_two.one = point;
+            if(p == this.points.length - 1)
+                line_two.two = new Point(this.points[0].x, this.points[0].y);
+            else{
+                line_two.two = new Point(this.points[p].x, this.points[p].y);
+            }
+
+            var arctOne =
+                Math.abs(
+                    Math.atan2(
+                        line_one.one.x - line_one.two.x,
+                        line_one.one.y - line_one.two.y
+                    )
+                );
+
+            var arctTwo =
+                Math.abs(
+                    Math.atan2(
+                        line_two.two.x - line_two.two.x,
+                        line_two.two.y - line_two.two.y
+                    )
+                 );
+
+            angle += arctOne - arctTwo;
+        }
+        console.log(angle);
+    }
+
     this.draw = function(){
+        CTX.restore();
         CTX.beginPath();
         CTX.strokeStyle = this.color;
         CTX.setLineDash([]);
+        CTX.lineWidth = this.size;
         for (var p in this.points){
             if(p == 0){
                 CTX.moveTo(this.points[p].x, this.points[p].y);
@@ -346,10 +391,12 @@ function Polygon(){
             CTX.setLineDash([2, 2]);
             CTX.lineTo(this.points[0].x, this.points[0].y);
             CTX.stroke();
-        }else{
+        }else if(this.saved){
+            CTX.fillStyle = this.color;
             CTX.setLineDash([]);
             CTX.lineTo(this.points[0].x, this.points[0].y);
             CTX.stroke();
+            CTX.fill();
         }
     }
 }
