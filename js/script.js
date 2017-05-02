@@ -156,12 +156,27 @@ function handleMove(evt){
 //Scaling down
 canvas.oncontextmenu = function (e) {
     e.preventDefault();
-    if(selected_shape != null) {
-        //Scalling around the polygon "bounding box center"
-        var scale_factor = 0.9;
-        selected_shape.move(-selected_shape.center().x, -selected_shape.center().y);
-        selected_shape.scale(scale_factor);
-        selected_shape.move(selected_shape.center().x, selected_shape.center().y);
+
+    if(element == 'scale'){
+        if(selected_shape != null) {
+            //Scalling around the polygon "bounding box center"
+            var scale_factor = 0.9;
+            var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
+            selected_shape.move(-center.x, -center.y);
+            selected_shape.scale(scale_factor);
+            selected_shape.move(center.x, center.y);
+        }
+    }
+
+    if(element == 'rotate'){
+        if(selected_shape != null){
+            var angle = -10 * (Math.PI/180);
+            // var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
+            var center = {x: canvas.width/2, y:  canvas.height/2};
+            // selected_shape.move(-center.x, -center.y);
+            selected_shape.rotate(angle, center.x, center.y);
+            // selected_shape.move(center.x, center.y);
+        }
     }
 };
 
@@ -246,9 +261,21 @@ function handleClick(event){
             if(selected_shape != null) {
                 //Scalling around the polygon "bounding box center"
                 var scale_factor = 1.1;
-                selected_shape.move(-selected_shape.center().x, -selected_shape.center().y);
+                var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
+                selected_shape.move(-center.x, -center.y);
                 selected_shape.scale(scale_factor);
-                selected_shape.move(selected_shape.center().x, selected_shape.center().y);
+                selected_shape.move(center.x, center.y);
+            }
+            break;
+        case 'rotate':
+            console.log('rotate');
+            if(selected_shape != null){
+                var angle = 10 * (Math.PI/180);
+                // var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
+                var center = {x: canvas.width/2, y:  canvas.height/2};
+                // selected_shape.move(-center.x, -center.y);
+                selected_shape.rotate(angle, center.x, center.y);
+                // selected_shape.move(center.x, center.y);
             }
             break;
         default:
@@ -347,6 +374,18 @@ function Point(x, y){
         this.y = scale_vector[1];
         this.matrix = identity_matrix();
     }
+
+    this.rotate = function(angle, center_x, center_y){
+        // this.matrix[0][0] = scale_factor; this.matrix[1][1] = scale_factor; this.matrix[2][2] = 1;
+        // this.vector[0] = this.x; this.vector[1] = this.y;
+        // var scale_vector = matrix_vector_multiply(this.matrix, this.vector);
+        var cos = Math.cos(angle);
+        var sin = Math.sin(angle);
+        this.x = center_x + (cos * (this.x - center_x)) + sin * (this.y - center_y);
+        this.y = center_y + (-sin * (this.x - center_x)) + cos * (this.y - center_y);
+        // this.y = scale_vector[1];
+        this.matrix = identity_matrix();
+    }
 }
 
 function randX(){
@@ -427,6 +466,8 @@ function Polygon(){
     this.min = new Point(0,0);
 
     this.center = function(){
+        this.min.x = this.points[0].x; this.min.y = this.points[0].y;
+        this.max.x = this.points[0].x; this.max.y = this.points[0].y;
         for(var point_id in this.points){
             if(this.min.x > this.points[point_id].x) this.min.x = this.points[point_id].x;
             if(this.min.y > this.points[point_id].y) this.min.y = this.points[point_id].y;
@@ -497,6 +538,12 @@ function Polygon(){
     this.scale = function(x, y){
         for (var point_id in this.points){
             this.points[point_id].scale(x, y);
+        }
+    }
+
+    this.rotate = function(angle, center_x, center_y){
+        for (var point_id in this.points){
+            this.points[point_id].rotate(angle, center_x, center_y);
         }
     }
 }
@@ -578,6 +625,11 @@ $(document).ready(function(){
 
         if($(this).hasClass('scale')){
             element = 'scale';
+            pause = true;
+        }
+
+        if($(this).hasClass('rotate')){
+            element = 'rotate';
             pause = true;
         }
 
