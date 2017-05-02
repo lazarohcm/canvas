@@ -171,8 +171,8 @@ canvas.oncontextmenu = function (e) {
     if(element == 'rotate'){
         if(selected_shape != null){
             var angle = -10 * (Math.PI/180);
-            // var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
-            var center = {x: canvas.width/2, y:  canvas.height/2};
+            var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
+            // var center = {x: canvas.width/2, y:  canvas.height/2};
             // selected_shape.move(-center.x, -center.y);
             selected_shape.rotate(angle, center.x, center.y);
             // selected_shape.move(center.x, center.y);
@@ -268,12 +268,11 @@ function handleClick(event){
             }
             break;
         case 'rotate':
-            console.log('rotate');
             if(selected_shape != null){
                 var angle = 10 * (Math.PI/180);
-                // var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
-                var center = {x: canvas.width/2, y:  canvas.height/2};
-                // selected_shape.move(-center.x, -center.y);
+                var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
+                //Rotation around the canvas center
+                // var center = {x: canvas.width/2, y:  canvas.height/2};
                 selected_shape.rotate(angle, center.x, center.y);
                 // selected_shape.move(center.x, center.y);
             }
@@ -367,6 +366,7 @@ function Point(x, y){
     }
 
     this.scale = function(scale_factor){
+
         this.matrix[0][0] = scale_factor; this.matrix[1][1] = scale_factor; this.matrix[2][2] = 1;
         this.vector[0] = this.x; this.vector[1] = this.y;
         var scale_vector = matrix_vector_multiply(this.matrix, this.vector);
@@ -376,13 +376,11 @@ function Point(x, y){
     }
 
     this.rotate = function(angle, center_x, center_y){
-        // this.matrix[0][0] = scale_factor; this.matrix[1][1] = scale_factor; this.matrix[2][2] = 1;
-        // this.vector[0] = this.x; this.vector[1] = this.y;
-        // var scale_vector = matrix_vector_multiply(this.matrix, this.vector);
         var cos = Math.cos(angle);
         var sin = Math.sin(angle);
-        this.x = center_x + (cos * (this.x - center_x)) + sin * (this.y - center_y);
-        this.y = center_y + (-sin * (this.x - center_x)) + cos * (this.y - center_y);
+        //Using the equation directly, instead of multiplying the matrix and the vector
+        this.x = center_x + (cos * (this.x - center_x)) + (-sin * (this.y - center_y));
+        this.y = center_y + (sin * (this.x - center_x)) + cos * (this.y - center_y);
         // this.y = scale_vector[1];
         this.matrix = identity_matrix();
     }
