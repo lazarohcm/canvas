@@ -600,11 +600,6 @@ function Polygon(){
     }
 }
 
-// function dist(p, q){
-//     var dx = q.x - p.x, dy = q.y - p.y;
-//     return dx * dx + dy* dy;
-// }
-
 
 function convexHull(){
     var new_points = [];
@@ -643,20 +638,6 @@ function convexHull(){
         display_hull.push(new_points[p]);
         p = q;
     }while(p != left_most)
-    // var first = true;
-    // CTX.beginPath();
-    // var start;
-    // for(var item in hull){
-    //     if(hull[item] != -1){
-    //         if(first){
-    //             first = false;
-    //             start = item;
-    //             CTX.moveTo(new_points[item].x, new_points[item].y);
-    //         }else{
-    //             CTX.lineTo(new_points[item].x, new_points[item].y);
-    //         }
-    //     }
-    // }
 
     CTX.beginPath();
     CTX.moveTo(display_hull[0].x, display_hull[0].y);
@@ -664,7 +645,7 @@ function convexHull(){
         CTX.lineTo(display_hull[i].x, display_hull[i].y);
     }
     CTX.lineTo(display_hull[0].x, display_hull[0].y);
-    
+
     CTX.stroke();
     pause = true;
 }
