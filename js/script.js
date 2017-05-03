@@ -412,6 +412,9 @@ function Line(one, two) {
     this.size = 2;
     this.color = randRGBA();
     this.type = 'line';
+    this.x_speed = randX();
+    this.y_speed = randX();
+
     this.draw = function (){
         CTX.strokeStyle = 'rgba(0, 0, 0, 1)';
         CTX.strokeStyle = this.color;
@@ -419,6 +422,22 @@ function Line(one, two) {
         CTX.beginPath();
         CTX.moveTo(this.one.x, this.one.y);
         CTX.lineTo(this.two.x, this.two.y);
+        // CTX.lineTo(this.center().x, this.center().y);
+        CTX.stroke();
+    }
+
+    this.draw_box = function(){
+        var min = new Point(
+            this.one.x - TOL,
+            this.one.y - TOL
+            );
+
+        var max = new Point(
+            this.one.x + TOL,
+            this.one.y + TOL
+            );
+
+        CTX.rect(min.x, min.y, max.x - min.x, max.y - min.y);
         // CTX.lineTo(this.center().x, this.center().y);
         CTX.stroke();
     }
@@ -431,7 +450,29 @@ function Line(one, two) {
     }
 
     this.tick = function(){
+        // this.move(1, 1);
 
+        if(!pause){
+            this.move(this.x_speed, this.y_speed);
+            var angle = 1 * (Math.PI/180);
+            var center = {x: this.center().x, y:  this.center().y};
+            this.move(-center.x, -center.y);
+            this.rotate(angle, center.x, center.y);
+            this.move(center.x, center.y);
+            if((this.one.x + this.size) >= canvas.width || (this.two.x + this.size) >= canvas.width){
+                this.x_speed = -(this.x_speed);
+            }
+            if((this.one.x - this.size) <= 0 || (this.two.x - this.size) <= 0){
+                this.x_speed = -(this.x_speed);
+            }
+
+            if((this.one.y + this.size) >= canvas.height || (this.two.y + this.size) >= canvas.height){
+                this.y_speed = -(this.y_speed);
+            }
+            if((this.one.y - this.size) <= 0 || (this.two.y - this.size) <= 0){
+                this.y_speed = -(this.y_speed);
+            }
+        }
     }
 
     this.move = function(x, y){
