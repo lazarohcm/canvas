@@ -9,12 +9,11 @@ var
     mouseLastPos = {x: 0, y:0},
     color = {r: 0, g: 0, b: 0, a:0},
     clicks = 0,
-    points = [],
-    lines = [],
-    polygons = [],
+    shapes = [],
     new_line = false,
     mouseDown = false,
     pause = false,
+    hulling = false,
     line = new Line(),
     lastClick = {x: null, y: null},
     polygon_started = false,
@@ -37,21 +36,10 @@ CTX.save();
 function reDraw(){
     CTX.clearRect(0,0,canvas.width, canvas.height);
 
-    if(polygons.length > 0){
-        for (var id in polygons){
-            polygons[id].draw();
-        }
-    }
-
-    for(var line in lines){
-        CTX.setLineDash([]);
-        lines[line].draw();
-        //lines[line].tick();
-    }
-
-    for(var point in points){
-        points[point].draw();
-        points[point].tick();
+    for(var element_id in shapes){
+        CTX.setLineDash([0]);
+        shapes[element_id].draw();
+        shapes[element_id].tick();
     }
 
     if(polygon_started){
@@ -73,6 +61,10 @@ function reDraw(){
             CTX.stroke();
         }
 
+    }
+
+    if(hulling){
+        convexHull();
     }
 }
 
@@ -153,7 +145,7 @@ function handleMove(evt){
     }
 }
 
-//Scaling down
+//Right click function
 canvas.oncontextmenu = function (e) {
     e.preventDefault();
 
@@ -172,10 +164,18 @@ canvas.oncontextmenu = function (e) {
         if(selected_shape != null){
             var angle = -10 * (Math.PI/180);
             var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
-            // var center = {x: canvas.width/2, y:  canvas.height/2};
-            // selected_shape.move(-center.x, -center.y);
+            selected_shape.move(-center.x, -center.y);
             selected_shape.rotate(angle, center.x, center.y);
-            // selected_shape.move(center.x, center.y);
+            selected_shape.move(center.x, center.y);
+        }
+    }
+
+    if(element == 'reflect'){
+        if(selected_shape != null){
+            var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
+            selected_shape.move(-center.x, -center.y);
+            selected_shape.reflect('y');
+            selected_shape.move(center.x, center.y);
         }
     }
 };
@@ -184,8 +184,9 @@ function handleClick(event){
     var point = new Point(mousePos.x, mousePos.y);
     switch (element){
         case 'point':
-            points.push(point);
-            point.draw();
+            // points.push(point);
+            shapes.push(point);
+            // point.draw();
             break;
         case 'line':
             clicks ++;
@@ -198,7 +199,7 @@ function handleClick(event){
             if(clicks == 2){
                 clicks = 0;
                 line.two = new Point(mousePos.x, mousePos.y);
-                lines.push(line);
+                shapes.push(line);
             }
             break;
         case 'polygon':
@@ -210,14 +211,14 @@ function handleClick(event){
                     Math.abs(y_click - polygon.points[0].y) < END_CLICK_RADIUS) && polygon.points.length && polygon.points.length > 2){
                     polygon_started = false;
                     polygon.saved = true;
-                    polygons.push(polygon);
+                    shapes.push(polygon);
                     polygon = new Polygon();
                 } else {
                     polygon.points.push(new Point(x_click, y_click));
                     //Locating the maximum and minimum x and y to have an easy central point
                     if(polygon.points.length >= MAX_POINTS){
                         polygon.saved = true;
-                        polygons.push(polygon);
+                        shapes.push(polygon);
                         polygon = new Polygon();
                         polygon_started = false;
                     }
@@ -233,26 +234,9 @@ function handleClick(event){
             break;
         case 'select':
             pause = true;
-            for(var point_id in points){
-                if(points[point_id].pick()){
-                    selected_shape = points[point_id];
-                }
-                points[point_id].draw();
-                points[point_id].tick();
+            for(var element_id in shapes){
+                if(shapes[element_id].pick()) selected_shape = shapes[element_id];
             }
-
-            var min = new Point(mousePos.x - TOL, mousePos.y - TOL);
-            var max = new Point(mousePos.x + TOL, mousePos.y + TOL);
-            for(var line_id in lines){
-                if(lines[line_id].pick(min,max)) selected_shape = lines[line_id];
-            }
-
-            for(var polygon_id in polygons){
-                if(polygons[polygon_id].pick()){
-                    selected_shape = polygons[polygon_id]
-                }
-            }
-
             break;
         case 'move':
             break;
@@ -271,11 +255,26 @@ function handleClick(event){
             if(selected_shape != null){
                 var angle = 10 * (Math.PI/180);
                 var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
-                //Rotation around the canvas center
-                // var center = {x: canvas.width/2, y:  canvas.height/2};
+                selected_shape.move(-center.x, -center.y);
                 selected_shape.rotate(angle, center.x, center.y);
-                // selected_shape.move(center.x, center.y);
+                selected_shape.move(center.x, center.y);
             }
+            break;
+        case 'reflect':
+            if(selected_shape != null){
+                console.log(selected_shape);
+                var center = {x: selected_shape.center().x, y:  selected_shape.center().y};
+                selected_shape.move(-center.x, -center.y);
+                selected_shape.reflect('x');
+                selected_shape.move(center.x, center.y);
+            }
+            break;
+        case 'remove':
+            if(selected_shape != null){
+                var index = shapes.indexOf(selected_shape);
+                shapes.splice(index, 1);
+            }
+            selected_shape = null;
             break;
         default:
             break;
@@ -312,6 +311,7 @@ function Point(x, y){
     this.x_speed = randX();
     this.y_speed = randX();
     this.color = randRGBA();
+    this.type = 'point';
 
     this.matrix = identity_matrix();
     this.vector = [0,0,1];
@@ -355,6 +355,7 @@ function Point(x, y){
         return false;
     }
 
+    //Transformations
     this.move = function(x, y){
         this.matrix[0][0] = 1; this.matrix[1][1] = 1; this.matrix[2][2] = 1;
         this.matrix[0][2] = x; this.matrix[1][2] = y;
@@ -378,10 +379,25 @@ function Point(x, y){
     this.rotate = function(angle, center_x, center_y){
         var cos = Math.cos(angle);
         var sin = Math.sin(angle);
-        //Using the equation directly, instead of multiplying the matrix and the vector
-        this.x = center_x + (cos * (this.x - center_x)) + (-sin * (this.y - center_y));
-        this.y = center_y + (sin * (this.x - center_x)) + cos * (this.y - center_y);
-        // this.y = scale_vector[1];
+        //Using directly the equation, instead of multiplying the matrix and the vector, didn't work
+        this.matrix[0][0] = cos; this.matrix[0][1] = -1*sin; this.matrix[1][0] = sin; this.matrix[1][1] = cos;
+        this.vector[0] = this.x; this.vector[1] = this.y;
+        var rotate_vector = matrix_vector_multiply(this.matrix, this.vector);
+        this.x = rotate_vector[0]; //center_x + (cos * (this.x - center_x)) + (-sin * (this.y - center_y));
+        this.y = rotate_vector[1]; //center_y + (sin * (this.x - center_x)) + cos * (this.y - center_y);
+        this.matrix = identity_matrix();
+    }
+
+    this.reflect = function(axis){
+        if(axis == 'x'){
+            this.matrix[1][1] = -1;
+        }else{
+            this.matrix[0][0] = -1;
+        }
+        this.vector[0] = this.x; this.vector[1] = this.y;
+        var reflection_vector = matrix_vector_multiply(this.matrix, this.vector);
+        this.x = reflection_vector[0];
+        this.y = reflection_vector[1];
         this.matrix = identity_matrix();
     }
 }
@@ -395,6 +411,7 @@ function Line(one, two) {
     this.two = new Point(two);
     this.size = 2;
     this.color = randRGBA();
+    this.type = 'line';
     this.draw = function (){
         CTX.strokeStyle = 'rgba(0, 0, 0, 1)';
         CTX.strokeStyle = this.color;
@@ -402,7 +419,15 @@ function Line(one, two) {
         CTX.beginPath();
         CTX.moveTo(this.one.x, this.one.y);
         CTX.lineTo(this.two.x, this.two.y);
+        // CTX.lineTo(this.center().x, this.center().y);
         CTX.stroke();
+    }
+
+    this.center = function(){
+        return new Point(
+            (this.one.x + this.two.x)/2,
+            (this.one.y + this.two.y)/2
+        )
     }
 
     this.tick = function(){
@@ -414,7 +439,9 @@ function Line(one, two) {
         this.two.move(x, y);
     }
 
-    this.pick = function(min, max){
+    this.pick = function(){
+        var min = new Point(mousePos.x - TOL, mousePos.y - TOL);
+        var max = new Point(mousePos.x + TOL, mousePos.y + TOL);
         /**
          * Source: https://github.com/donkike/Computer-Graphics/blob/master/LineClipping/LineClippingPanel.java
          */
@@ -453,6 +480,22 @@ function Line(one, two) {
         }while(true);
         return false;
     }
+
+    //Transformations
+    this.scale = function(scale_factor){
+        this.one.scale(scale_factor);
+        this.two.scale(scale_factor);
+    };
+
+    this.rotate = function(angle, center_x, center_y){
+        this.one.rotate(angle, center_x, center_y);
+        this.two.rotate(angle, center_x, center_y);
+    }
+
+    this.reflect = function(axis){
+        this.one.reflect(axis);
+        this.two.reflect(axis);
+    }
 }
 
 function Polygon(){
@@ -462,7 +505,7 @@ function Polygon(){
     this.size = 2;
     this.max = new Point(0,0);
     this.min = new Point(0,0);
-
+    this.type = 'polygon';
     this.center = function(){
         this.min.x = this.points[0].x; this.min.y = this.points[0].y;
         this.max.x = this.points[0].x; this.max.y = this.points[0].y;
@@ -527,15 +570,20 @@ function Polygon(){
         return wn !== 0;
     }
 
+    this.tick = function(){
+
+    }
+
+    //Transformations
     this.move = function(x, y){
         for (var point_id in this.points){
             this.points[point_id].move(x, y);
         }
     }
 
-    this.scale = function(x, y){
+    this.scale = function(scale_factor){
         for (var point_id in this.points){
-            this.points[point_id].scale(x, y);
+            this.points[point_id].scale(scale_factor);
         }
     }
 
@@ -544,13 +592,82 @@ function Polygon(){
             this.points[point_id].rotate(angle, center_x, center_y);
         }
     }
+
+    this.reflect = function(axis){
+        for (var point_id in this.points){
+            this.points[point_id].reflect(axis);
+        }
+    }
 }
 
-function isLeft(p0, p1, p2) {
-    return ( (p1.x - p0.x) * (p2.y - p0.y) ) -
-        ((p2.x - p0.x) * (p1.y - p0.y) );
-}
+// function dist(p, q){
+//     var dx = q.x - p.x, dy = q.y - p.y;
+//     return dx * dx + dy* dy;
+// }
 
+
+function convexHull(){
+    var new_points = [];
+    for(var i = 0; i < shapes.length; i++){
+        if(shapes[i].type === 'point'){
+            new_points.push(shapes[i]);
+        }
+    }
+    if(new_points.length < 3){
+        console.log('baaahhh');
+        return;
+    }
+
+    var hull = new Array(new_points.length);
+    hull.fill(-1);
+    var display_hull = [];
+    //finding the leftmost point
+    var left_most = 0;
+    for(var point_id in new_points){
+        if(new_points[point_id].x < new_points[left_most].x) left_most = point_id;
+    }
+
+    var p = left_most, q;
+    do{
+        // Search for a point 'q' such that orientation(p, i, q) is
+        // counterclockwise for all points 'i'
+        q = (p+1) % new_points.length;
+        for(var i in new_points){
+            var turn = isRight(new_points[p], new_points[i], new_points[q]);
+            if(turn < 0){
+                q = i;
+            }
+        }
+
+        hull[p] = q;
+        display_hull.push(new_points[p]);
+        p = q;
+    }while(p != left_most)
+    // var first = true;
+    // CTX.beginPath();
+    // var start;
+    // for(var item in hull){
+    //     if(hull[item] != -1){
+    //         if(first){
+    //             first = false;
+    //             start = item;
+    //             CTX.moveTo(new_points[item].x, new_points[item].y);
+    //         }else{
+    //             CTX.lineTo(new_points[item].x, new_points[item].y);
+    //         }
+    //     }
+    // }
+
+    CTX.beginPath();
+    CTX.moveTo(display_hull[0].x, display_hull[0].y);
+    for(var i = 1; i <display_hull.length; i++){
+        CTX.lineTo(display_hull[i].x, display_hull[i].y);
+    }
+    CTX.lineTo(display_hull[0].x, display_hull[0].y);
+    
+    CTX.stroke();
+    pause = true;
+}
 
 
 //Helpers
@@ -590,6 +707,15 @@ function identity_matrix(){
     return matrix;
 }
 
+function isLeft(p0, p1, p2) {
+    return ( (p1.x - p0.x) * (p2.y - p0.y) ) -
+        ((p2.x - p0.x) * (p1.y - p0.y) );
+}
+
+function isRight(p0,p1,p2){
+    return ((p1.y-p0.y)*(p2.x-p1.x)) - ((p1.x-p0.x)*(p2.y-p1.y));
+}
+
 $(document).ready(function(){
     $('.menu button').on('click', function(e){
         $('.menu button').removeClass('active');
@@ -598,38 +724,65 @@ $(document).ready(function(){
             element = 'point';
             pause = false;
             selected_shape = null;
+            hulling = false;
         }
         if($(this).hasClass('line')){
             element = 'line';
             pause = false;
             selected_shape = null;
+            hulling = false;
         }
         if($(this).hasClass('polygon')){
             element = 'polygon';
             pause = false;
             selected_shape = null;
+            hulling = false;
         }
 
         if($(this).hasClass('select')){
             element = 'select';
             pause = true;
-            selected_shape = null;
+            hulling = false;
         }
 
         if($(this).hasClass('move')){
             element = 'move';
             pause = true;
+            hulling = false;
         }
 
         if($(this).hasClass('scale')){
             element = 'scale';
             pause = true;
+            hulling = false;
         }
 
         if($(this).hasClass('rotate')){
             element = 'rotate';
             pause = true;
+            hulling = false;
         }
+
+        if($(this).hasClass('reflect')){
+            element = 'reflect';
+            pause = true;
+            hulling = false;
+        }
+
+        if($(this).hasClass('remove')){
+            element = 'remove';
+            pause = true;
+            hulling = false;
+        }
+
+        if($(this).hasClass('hull')){
+            convexHull();
+            hulling = true;
+            // element = 'remove';
+            // pause = true;
+        }
+
+
 
     })
 
